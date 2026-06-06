@@ -3,188 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Traductor de Voz Automático</title>
+<title>Traductor de Voz</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-
   body {
-    background: #080810;
-    color: #f0eff8;
+    background: #080810; color: #f0eff8;
     font-family: 'Segoe UI', system-ui, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    min-height: 100vh; display: flex; flex-direction: column;
   }
-
   body::before {
-    content: '';
-    position: fixed; inset: 0; pointer-events: none;
+    content:''; position:fixed; inset:0; pointer-events:none;
     background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(99,179,237,0.08) 0%, transparent 70%);
   }
-
   .app {
-    display: flex; flex-direction: column;
-    height: 100vh; max-width: 500px;
-    margin: 0 auto; width: 100%;
-    position: relative; z-index: 1;
+    display:flex; flex-direction:column; height:100vh;
+    max-width:500px; margin:0 auto; width:100%; position:relative; z-index:1;
   }
-
-  header {
-    padding: 20px 20px 10px;
-    text-align: center;
-  }
-
+  header { padding:20px 20px 10px; text-align:center; }
   header h1 {
-    font-size: 22px; font-weight: 800;
-    background: linear-gradient(135deg,#63b3ed,#f6ad55);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size:22px; font-weight:800;
+    background:linear-gradient(135deg,#63b3ed,#f6ad55);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
   }
+  header p { font-size:12px; color:#444; margin-top:3px; }
 
-  header p { font-size: 12px; color: #444; margin-top: 3px; }
-
-  /* Conversation */
   #chat {
-    flex: 1; overflow-y: auto;
-    padding: 14px 16px;
-    display: flex; flex-direction: column; gap: 14px;
+    flex:1; overflow-y:auto; padding:14px 16px;
+    display:flex; flex-direction:column; gap:14px;
   }
-
-  #chat::-webkit-scrollbar { width: 3px; }
-  #chat::-webkit-scrollbar-thumb { background: #1a1a2a; border-radius: 4px; }
+  #chat::-webkit-scrollbar { width:3px; }
+  #chat::-webkit-scrollbar-thumb { background:#1a1a2a; border-radius:4px; }
 
   .empty {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 10px; text-align: center; padding: 40px;
-    min-height: 220px; color: #333;
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:10px; text-align:center; padding:40px; min-height:220px; color:#333;
   }
+  .empty .icon { font-size:48px; }
+  .empty p { font-size:14px; line-height:1.7; color:#444; }
+  .flags { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:4px; }
+  .flags span { font-size:20px; opacity:0.5; }
 
-  .empty .icon { font-size: 48px; }
-  .empty p { font-size: 14px; line-height: 1.7; color: #444; }
-  .flags { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
-  .flags span { font-size: 20px; opacity: 0.5; }
-
-  /* Bubbles */
-  .bubble-wrap {
-    display: flex; flex-direction: column;
-    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
-  }
-
-  .bubble-wrap.left { align-items: flex-start; }
-  .bubble-wrap.right { align-items: flex-end; }
-
-  .lang-tag { font-size: 11px; color: #555; margin-bottom: 4px; padding: 0 4px; }
-
-  .bubble {
-    max-width: 85%; padding: 12px 16px;
-  }
-
+  .bubble-wrap { display:flex; flex-direction:column; animation:popIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+  .bubble-wrap.left { align-items:flex-start; }
+  .bubble-wrap.right { align-items:flex-end; }
+  .lang-tag { font-size:11px; color:#555; margin-bottom:4px; padding:0 4px; }
+  .bubble { max-width:85%; padding:12px 16px; }
   .bubble-wrap.left .bubble {
-    border-radius: 20px 20px 20px 4px;
-    background: linear-gradient(135deg,rgba(99,179,237,0.15),rgba(99,179,237,0.05));
-    border: 1px solid rgba(99,179,237,0.3);
+    border-radius:20px 20px 20px 4px;
+    background:linear-gradient(135deg,rgba(99,179,237,0.15),rgba(99,179,237,0.05));
+    border:1px solid rgba(99,179,237,0.3);
   }
-
   .bubble-wrap.right .bubble {
-    border-radius: 20px 20px 4px 20px;
-    background: linear-gradient(135deg,rgba(246,173,85,0.15),rgba(246,173,85,0.05));
-    border: 1px solid rgba(246,173,85,0.3);
+    border-radius:20px 20px 4px 20px;
+    background:linear-gradient(135deg,rgba(246,173,85,0.15),rgba(246,173,85,0.05));
+    border:1px solid rgba(246,173,85,0.3);
   }
-
-  .original { font-size: 15px; color: #f0eff8; line-height: 1.55; }
-
+  .original { font-size:15px; color:#f0eff8; line-height:1.55; }
   .translation {
-    margin-top: 8px; padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    font-size: 13px; color: #777; font-style: italic; line-height: 1.4;
+    margin-top:8px; padding-top:8px;
+    border-top:1px solid rgba(255,255,255,0.06);
+    font-size:13px; color:#777; font-style:italic; line-height:1.4;
   }
+  .target-lang { font-size:10px; color:#444; font-style:normal; margin-right:4px; }
+  .dots { display:inline-flex; gap:4px; align-items:center; }
+  .dot { width:6px; height:6px; border-radius:50%; background:#666; animation:dotBounce 1s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay:0.15s; }
+  .dot:nth-child(3) { animation-delay:0.30s; }
 
-  .target-lang { font-size: 10px; color: #444; font-style: normal; margin-right: 4px; }
-
-  .dots { display: inline-flex; gap: 4px; align-items: center; }
-  .dot {
-    width: 6px; height: 6px; border-radius: 50%; background: #666;
-    animation: dotBounce 1s ease-in-out infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.15s; }
-  .dot:nth-child(3) { animation-delay: 0.30s; }
-
-  /* Controls */
   .controls {
-    padding: 14px 20px 28px;
-    background: #0d0d18;
-    border-top: 1px solid #111120;
-    display: flex; flex-direction: column;
-    align-items: center; gap: 12px;
+    padding:14px 20px 28px; background:#0d0d18;
+    border-top:1px solid #111120;
+    display:flex; flex-direction:column; align-items:center; gap:12px;
   }
+  .wave { display:flex; align-items:center; gap:3px; height:28px; }
+  .bar { width:3px; border-radius:2px; background:#1e1e2e; height:30%; transition:background 0.3s; }
+  .wave.active .bar { background:#63b3ed; }
+  .wave.active .bar:nth-child(1) { animation:wave 0.5s ease-in-out infinite; }
+  .wave.active .bar:nth-child(2) { animation:wave 0.65s ease-in-out 0.05s infinite; }
+  .wave.active .bar:nth-child(3) { animation:wave 0.5s ease-in-out 0.10s infinite; }
+  .wave.active .bar:nth-child(4) { animation:wave 0.65s ease-in-out 0.15s infinite; }
+  .wave.active .bar:nth-child(5) { animation:wave 0.5s ease-in-out 0.20s infinite; }
+  .wave.active .bar:nth-child(6) { animation:wave 0.65s ease-in-out 0.25s infinite; }
+  .wave.active .bar:nth-child(7) { animation:wave 0.5s ease-in-out 0.30s infinite; }
+  .wave.active .bar:nth-child(8) { animation:wave 0.65s ease-in-out 0.35s infinite; }
+  .wave.active .bar:nth-child(9) { animation:wave 0.5s ease-in-out 0.40s infinite; }
 
-  /* Wave */
-  .wave { display: flex; align-items: center; gap: 3px; height: 28px; }
-  .bar {
-    width: 3px; border-radius: 2px;
-    background: #1e1e2e; height: 30%;
-    transition: background 0.3s;
-  }
-  .wave.active .bar { background: #63b3ed; }
-  .wave.active .bar:nth-child(1) { animation: wave 0.5s ease-in-out infinite; }
-  .wave.active .bar:nth-child(2) { animation: wave 0.65s ease-in-out 0.05s infinite; }
-  .wave.active .bar:nth-child(3) { animation: wave 0.5s ease-in-out 0.10s infinite; }
-  .wave.active .bar:nth-child(4) { animation: wave 0.65s ease-in-out 0.15s infinite; }
-  .wave.active .bar:nth-child(5) { animation: wave 0.5s ease-in-out 0.20s infinite; }
-  .wave.active .bar:nth-child(6) { animation: wave 0.65s ease-in-out 0.25s infinite; }
-  .wave.active .bar:nth-child(7) { animation: wave 0.5s ease-in-out 0.30s infinite; }
-  .wave.active .bar:nth-child(8) { animation: wave 0.65s ease-in-out 0.35s infinite; }
-  .wave.active .bar:nth-child(9) { animation: wave 0.5s ease-in-out 0.40s infinite; }
-
-  /* Mic button */
-  .mic-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
-
+  .mic-wrap { position:relative; display:flex; align-items:center; justify-content:center; }
   .ripple {
-    position: absolute; width: 72px; height: 72px; border-radius: 50%;
-    border: 2px solid rgba(99,179,237,0.4);
-    display: none;
+    position:absolute; width:72px; height:72px; border-radius:50%;
+    border:2px solid rgba(99,179,237,0.4); display:none;
   }
-  .ripple.r1 { animation: ripple 1.5s ease-out infinite; }
-  .ripple.r2 { animation: ripple 1.5s ease-out 0.5s infinite; }
+  .ripple.r1 { animation:ripple 1.5s ease-out infinite; }
+  .ripple.r2 { animation:ripple 1.5s ease-out 0.5s infinite; }
 
   #micBtn {
-    width: 72px; height: 72px; border-radius: 50%;
-    border: none; cursor: pointer; font-size: 28px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg,#3182ce,#63b3ed);
-    box-shadow: 0 0 24px rgba(49,130,206,0.4);
-    transition: all 0.25s; position: relative; z-index: 1;
-    color: white;
+    width:72px; height:72px; border-radius:50%; border:none; cursor:pointer; font-size:28px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#3182ce,#63b3ed);
+    box-shadow:0 0 24px rgba(49,130,206,0.4);
+    transition:all 0.25s; position:relative; z-index:1; color:white;
   }
-
   #micBtn.recording {
-    background: linear-gradient(135deg,#e53e3e,#fc8181);
-    box-shadow: 0 0 24px rgba(229,62,62,0.5);
+    background:linear-gradient(135deg,#e53e3e,#fc8181);
+    box-shadow:0 0 24px rgba(229,62,62,0.5);
   }
+  #micBtn.recording ~ .ripple { display:block; }
 
-  #micBtn.recording ~ .ripple { display: block; }
-
-  #status {
-    font-size: 12px; color: #444;
-    text-align: center; min-height: 16px;
-    transition: color 0.3s;
-  }
-
-  #status.active { color: #63b3ed; }
-  #status.error  { color: #f76a6a; }
+  #status { font-size:12px; color:#444; text-align:center; min-height:16px; transition:color 0.3s; }
+  #status.active { color:#63b3ed; }
+  #status.error  { color:#f76a6a; }
 
   #clearBtn {
-    display: none; background: transparent;
-    border: 1px solid #1e1e2e; color: #444;
-    border-radius: 8px; padding: 5px 14px;
-    font-size: 12px; cursor: pointer;
-    transition: border-color 0.2s;
+    display:none; background:transparent; border:1px solid #1e1e2e; color:#444;
+    border-radius:8px; padding:5px 14px; font-size:12px; cursor:pointer;
   }
-  #clearBtn:hover { border-color: #f76a6a; color: #f76a6a; }
 
-  /* Animations */
   @keyframes popIn {
     from { opacity:0; transform:scale(0.88) translateY(10px); }
     to   { opacity:1; transform:scale(1) translateY(0); }
@@ -201,26 +135,9 @@
     0%,100% { transform:scaleY(0.4); }
     50%     { transform:scaleY(1); }
   }
-
-  /* No support */
-  .no-support {
-    position: fixed; inset: 0; background: #080810;
-    display: none; align-items: center; justify-content: center;
-    flex-direction: column; gap: 12px; text-align: center; padding: 32px;
-    z-index: 100;
-  }
-  .no-support h2 { font-size: 20px; color: #f76a6a; }
-  .no-support p  { font-size: 13px; color: #555; line-height: 1.6; }
 </style>
 </head>
 <body>
-
-<div class="no-support" id="noSupport">
-  <div style="font-size:40px">🎙️</div>
-  <h2>Micrófono no disponible</h2>
-  <p>Tu navegador no soporta reconocimiento de voz.<br>Abre este archivo en <strong>Chrome</strong> para que funcione.</p>
-</div>
-
 <div class="app">
   <header>
     <h1>🌐 Traductor Automático de Voz</h1>
@@ -244,13 +161,11 @@
       <div class="bar"></div><div class="bar"></div><div class="bar"></div>
       <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     </div>
-
     <div class="mic-wrap">
       <button id="micBtn">🎙️</button>
       <div class="ripple r1"></div>
       <div class="ripple r2"></div>
     </div>
-
     <div id="status">Toca el micrófono y habla</div>
     <button id="clearBtn" onclick="clearChat()">🗑️ Limpiar conversación</button>
   </div>
@@ -258,8 +173,6 @@
 
 <script>
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (!SpeechRec) document.getElementById('noSupport').style.display = 'flex';
-
 const chat     = document.getElementById('chat');
 const micBtn   = document.getElementById('micBtn');
 const wave     = document.getElementById('wave');
@@ -273,11 +186,26 @@ let currentId = null;
 let finalText = '';
 let bubbleAdded = false;
 
+// Language detection using franc-like simple detection
+const LANG_PATTERNS = {
+  'es': { name: 'Español', flag: '🇪🇸', target: 'en', targetName: 'English' },
+  'en': { name: 'English', flag: '🇺🇸', target: 'es', targetName: 'Español' },
+  'fr': { name: 'Français', flag: '🇫🇷', target: 'es', targetName: 'Español' },
+  'de': { name: 'Deutsch', flag: '🇩🇪', target: 'es', targetName: 'Español' },
+  'pt': { name: 'Português', flag: '🇧🇷', target: 'es', targetName: 'Español' },
+  'it': { name: 'Italiano', flag: '🇮🇹', target: 'es', targetName: 'Español' },
+  'ja': { name: '日本語', flag: '🇯🇵', target: 'es', targetName: 'Español' },
+  'zh': { name: '中文', flag: '🇨🇳', target: 'es', targetName: 'Español' },
+  'ru': { name: 'Русский', flag: '🇷🇺', target: 'es', targetName: 'Español' },
+};
+
 micBtn.onclick = () => isRecording ? stopRec() : startRec();
 
 function startRec() {
-  if (!SpeechRec) return;
-
+  if (!SpeechRec) {
+    setStatus('Usa Chrome o Safari para reconocimiento de voz', 'error');
+    return;
+  }
   const side = msgCount % 2 === 0 ? 'left' : 'right';
   recognition = new SpeechRec();
   recognition.lang = '';
@@ -303,20 +231,17 @@ function startRec() {
     if (final) finalText = final;
     const text = final || interim;
     if (!text) return;
-
     if (!bubbleAdded) {
       bubbleAdded = true;
       addBubble(currentId, side, text);
     } else {
-      document.querySelector(`#${currentId} .original`).textContent = text;
+      const el = document.querySelector('#' + currentId + ' .original');
+      if (el) el.textContent = text;
     }
   };
 
   recognition.onerror = (e) => {
-    const msg = e.error === 'not-allowed'
-      ? '🔒 Permiso denegado — habilita el micrófono en tu navegador'
-      : 'Error: ' + e.error;
-    setStatus(msg, 'error');
+    setStatus(e.error === 'not-allowed' ? '🔒 Permiso denegado — habilita el micrófono' : 'Error: ' + e.error, 'error');
     stopRec(false);
   };
 
@@ -324,24 +249,22 @@ function startRec() {
     stopRec(false);
     const text = finalText.trim();
     if (!text) {
-      if (bubbleAdded) removeBubble(currentId);
+      if (bubbleAdded) document.getElementById(currentId)?.remove();
       setStatus('No se detectó voz, intenta de nuevo', '');
       return;
     }
-
-    setStatus('Detectando idioma y traduciendo…', 'active');
+    setStatus('Traduciendo…', 'active');
     showDots(currentId);
-
     try {
-      const result = await detectAndTranslate(text);
-      updateBubbleLang(currentId, result.detectedFlag, result.detectedLanguage);
-      showTranslation(currentId, result.translation, result.targetLanguage);
+      const result = await translateMyMemory(text);
+      updateLangTag(currentId, result.flag, result.langName);
+      showTranslation(currentId, result.translation, result.targetName);
       setStatus('Toca el micrófono y habla', '');
       msgCount++;
-      checkClearBtn();
+      clearBtn.style.display = 'block';
     } catch(err) {
       showError(currentId);
-      setStatus('Error al traducir', 'error');
+      setStatus('Error al traducir: ' + err.message, 'error');
     }
     scrollDown();
   };
@@ -357,37 +280,40 @@ function stopRec(resetUI = true) {
   if (recognition) { try { recognition.stop(); } catch(_){} recognition = null; }
 }
 
-async function detectAndTranslate(text) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: `Detect the language of this text and translate it. If it's Spanish translate to English. If it's English translate to Spanish. If it's any other language, translate to both Spanish and English (put both in the translation field separated by " / ").
+async function translateMyMemory(text) {
+  // Detect language from speech recognition result
+  // Use browser's detected lang if available, else default
+  let detectedLang = 'es';
+  
+  // Simple heuristic detection
+  if (/[一-龯ぁ-ん]/.test(text)) detectedLang = 'ja';
+  else if (/[а-яА-Я]/.test(text)) detectedLang = 'ru';
+  else if (/[一-鿕]/.test(text)) detectedLang = 'zh';
+  else if (/\b(the|is|are|was|were|have|has|will|would|can|could|should|this|that|with|from|they|their|there)\b/i.test(text)) detectedLang = 'en';
+  else if (/\b(el|la|los|las|un|una|que|de|en|es|con|por|para|como|pero|muy|este|esta)\b/i.test(text)) detectedLang = 'es';
+  else if (/\b(le|la|les|un|une|des|est|sont|avec|pour|dans|sur|pas|plus|vous|nous)\b/i.test(text)) detectedLang = 'fr';
+  else if (/\b(der|die|das|ist|sind|ein|eine|mit|von|für|auf|nicht|auch|ich|sie|wir)\b/i.test(text)) detectedLang = 'de';
+  else if (/\b(o|a|os|as|um|uma|que|de|em|com|por|para|mas|muito|este|esta|não)\b/i.test(text)) detectedLang = 'pt';
 
-Respond ONLY with this exact JSON (no markdown, no extra text):
-{"detectedLanguage":"<language name in that language>","detectedFlag":"<one emoji flag>","translation":"<translated text>","targetLanguage":"<target language name in English>"}
+  const langInfo = LANG_PATTERNS[detectedLang] || LANG_PATTERNS['es'];
+  const targetLang = langInfo.target;
 
-Text: ${text}`
-      }]
-    })
-  });
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${detectedLang}|${targetLang}`;
+  const res = await fetch(url);
   const data = await res.json();
-  if (data.error) throw new Error(data.error.message);
-  const raw = data.content.map(b => b.text || '').join('').trim();
-  // strip possible markdown fences
-  const clean = raw.replace(/```json|```/g,'').trim();
-  return JSON.parse(clean);
-}
 
-// ── DOM helpers ───────────────────────────────────────────────────
+  if (data.responseStatus !== 200) throw new Error('Error de traducción');
+  
+  return {
+    langName: langInfo.name,
+    flag: langInfo.flag,
+    translation: data.responseData.translatedText,
+    targetName: langInfo.targetName,
+  };
+}
 
 function addBubble(id, side, text) {
   document.getElementById('emptyState')?.remove();
-
   const wrap = document.createElement('div');
   wrap.className = `bubble-wrap ${side}`;
   wrap.id = id;
@@ -401,28 +327,24 @@ function addBubble(id, side, text) {
   scrollDown();
 }
 
-function updateBubbleLang(id, flag, lang) {
-  const el = document.querySelector(`#${id} .lang-tag`);
-  if (el) el.textContent = `${flag} ${lang}`;
+function updateLangTag(id, flag, lang) {
+  const el = document.querySelector('#' + id + ' .lang-tag');
+  if (el) el.textContent = flag + ' ' + lang;
 }
 
 function showDots(id) {
-  const el = document.querySelector(`#${id} .translation`);
+  const el = document.querySelector('#' + id + ' .translation');
   if (el) el.innerHTML = '<span class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
 }
 
 function showTranslation(id, text, targetLang) {
-  const el = document.querySelector(`#${id} .translation`);
+  const el = document.querySelector('#' + id + ' .translation');
   if (el) el.innerHTML = `<span class="target-lang">→ ${esc(targetLang)}</span>${esc(text)}`;
 }
 
 function showError(id) {
-  const el = document.querySelector(`#${id} .translation`);
+  const el = document.querySelector('#' + id + ' .translation');
   if (el) el.innerHTML = '<span style="color:#f76a6a">⚠️ Error al traducir</span>';
-}
-
-function removeBubble(id) {
-  document.getElementById(id)?.remove();
 }
 
 function clearChat() {
@@ -436,11 +358,7 @@ function clearChat() {
       </div>
     </div>`;
   msgCount = 0;
-  checkClearBtn();
-}
-
-function checkClearBtn() {
-  clearBtn.style.display = msgCount > 0 ? 'block' : 'none';
+  clearBtn.style.display = 'none';
 }
 
 function setStatus(msg, type) {
@@ -448,13 +366,8 @@ function setStatus(msg, type) {
   statusEl.className = type || '';
 }
 
-function scrollDown() {
-  setTimeout(() => chat.scrollTop = chat.scrollHeight, 50);
-}
-
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function scrollDown() { setTimeout(() => chat.scrollTop = chat.scrollHeight, 50); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 </body>
 </html>
